@@ -16,6 +16,7 @@ import { User } from "./user.entity";
 // cada uno con su propio estado — en vez de un único booleano "verified"
 // para todo el tutor, que es lo que agrega User.tutor_verification_status.
 export enum CredentialType {
+  IDENTIDAD = "identidad",
   TITULO = "titulo",
   CERTIFICACION = "certificacion",
   REFERENCIA = "referencia",
