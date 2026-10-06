@@ -50,12 +50,16 @@ export class CredentialsService {
   // de cualquier tutor, con el nombre del tutor para no tener que cruzar
   // manualmente contra /users.
   async findPending() {
-    return this.credentialsRepo.find({
-      where: { status: CredentialStatus.PENDING },
-      relations: ["user"],
-      order: { created_at: "ASC" },
-    });
-  }
+  const list = await this.credentialsRepo.find({
+    where: { status: CredentialStatus.PENDING },
+    relations: ["user"],
+    order: { created_at: "ASC" },
+  });
+  return list.map((c) => ({
+    ...c,
+    user: c.user ? { id: c.user.id, email: c.user.email, full_name: c.user.full_name } : undefined,
+  }));
+}
 
   // Acción de admin: aprobar o rechazar una credencial puntual. Después
   // recalcula el estado agregado del tutor (users.tutor_verification_status)
