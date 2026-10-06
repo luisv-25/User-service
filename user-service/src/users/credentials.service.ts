@@ -86,20 +86,35 @@ export class CredentialsService {
   // queda REJECTED. Se recalcula desde cero cada vez, no se incrementa,
   // para que quede siempre consistente sin importar el orden de revisión.
   private async recomputeVerificationStatus(userId: string) {
-    const all = await this.credentialsRepo.find({ where: { user: { id: userId } } });
+  const all = await this.credentialsRepo.find({ where: { user: { id: userId } } });
 
-    let next: TutorVerificationStatus;
-    if (all.some((c) => c.status === CredentialStatus.APPROVED)) {
-      next = TutorVerificationStatus.APPROVED;
-    } else if (all.some((c) => c.status === CredentialStatus.PENDING)) {
-      next = TutorVerificationStatus.PENDING;
-    } else if (all.length > 0) {
-      next = TutorVerificationStatus.REJECTED;
-    } else {
-      next = TutorVerificationStatus.NOT_SUBMITTED;
-    }
+  const isAcademic = (t: CredentialType) =>
+    t === CredentialType.TITULO || t === CredentialType.CERTIFICACION || t === CredentialType.REFERENCIA;
 
-    await this.usersRepo.update({ id: userId }, { tutor_verification_status: next });
-    this.eventsPublisher.publishTutorVerificationUpdated({ userId, status: next });
+  const hasApprovedIdentity = all.some(
+    (c) => c.document_type === CredentialType.IDENTIDAD && c.status === CredentialStatus.APPROVED,
+  );
+  const hasApprovedAcademic = all.some(
+    (c) => isAcademic(c.document_type) && c.status === CredentialStatus.APPROVED,
+  );
+  const hasPending = all.some((c) => c.status === CredentialStatus.PENDING);
+
+  let next: TutorVerificationStatus;
+  if (hasApprovedIdentity && hasApprovedAcademic) {
+    // Documento primario: "verificación de identidad Y credenciales
+    // académicas" — exige las dos partes aprobadas, no basta con una sola.
+    next = TutorVerificationStatus.APPROVED;
+  } else if (all.length === 0) {
+    next = TutorVerificationStatus.NOT_SUBMITTED;
+  } else if (hasPending) {
+    next = TutorVerificationStatus.PENDING;
+  } else {
+    // Ya se revisó todo lo que subió, pero no cumple las dos partes
+    // (falta identidad, falta académica, o algo fue rechazado).
+    next = TutorVerificationStatus.REJECTED;
+  }
+
+  await this.usersRepo.update({ id: userId }, { tutor_verification_status: next });
+  this.eventsPublisher.publishTutorVerificationUpdated({ userId, status: next });
   }
 }
