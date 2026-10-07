@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { TutorCredential, CredentialStatus } from "./entities/tutor-credential.entity";
+import { TutorCredential, CredentialStatus, CredentialType } from "./entities/tutor-credential.entity";
 import { User, TutorVerificationStatus, UserRole } from "./entities/user.entity";
 import { CreateCredentialDto } from "./dto/create-credential.dto";
 import { EventsPublisher } from "../events/events.publisher";
+
 
 @Injectable()
 export class CredentialsService {
