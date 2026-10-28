@@ -1,5 +1,7 @@
 name: CI - user-service
 
+
+
 on:
   push:
     branches: [main, develop]
@@ -14,6 +16,10 @@ jobs:
   build-and-check:
     name: Instalar, compilar y validar imagen Docker
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./user-service
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
@@ -26,11 +32,13 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
+
       - name: Lint
         run: npm run lint --if-present
 
       - name: Compilar (tsc)
         run: npm run build
+
 
       - name: Tests
         run: npm test --if-present
