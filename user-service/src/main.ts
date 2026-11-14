@@ -3,9 +3,11 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
+import { setupMetrics } from "./metrics";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  setupMetrics(app);
   app.enableCors();
   // CAMBIO: permite recibir PDFs de credenciales (llegan dentro del JSON). Por defecto el
   // límite es 100 kb y casi ningún PDF cabe. 10 MB cubre el máximo de 5 MB de la pantalla.
