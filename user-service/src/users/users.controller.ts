@@ -4,10 +4,39 @@ import { SetAvailabilityDto } from "./dto/set-availability.dto";
 import { UserRole, TutorVerificationStatus } from "./entities/user.entity";
 import { JwtRolesGuard } from "../common/jwt-roles.guard";
 import { Roles } from "../common/roles.decorator";
+import {ForbiddenException, Req } from "@nestjs/common";
+import { UpdateUserDto } from "./dto/update-user.dto";
+
 
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  
+  @Patch(":id")
+  @UseGuards(JwtRolesGuard)
+  async updateUser(
+    @Param("id") id: string,
+    @Body() dto: UpdateUserDto,
+    @Req() req: any,
+  ) {
+    const currentUser = req.user;
+  
+    if (
+      currentUser.id !== id &&
+      currentUser.role !== "admin"
+    ) {
+      throw new ForbiddenException(
+        "No tienes permiso para modificar este usuario",
+      );
+    }
+  
+    return this.usersService.updateUser(
+      id,
+      dto.fullName,
+    );
+  }
+
 
   // Directorio para las pestañas "Tutores"/"Estudiantes" del frontend;
   // ?verificationStatus= es para la cola de revisión del admin.
