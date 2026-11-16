@@ -65,4 +65,39 @@ export class AuthService {
       user: this.usersService.toPublicProfile(user),
     };
   }
+  
+  async refreshToken(refreshToken: string) {
+    let payload: { sub: string; type?: string };
+  
+    try {
+      payload = this.jwtService.verify(refreshToken);
+  
+      if (payload.type !== "refresh" || !payload.sub) {
+        throw new UnauthorizedException("Token inválido");
+      }
+    } catch {
+      throw new UnauthorizedException(
+        "Refresh token inválido o expirado",
+      );
+    }
+  
+    const user = await this.usersService.findById(payload.sub);
+  
+    const accessToken = this.jwtService.sign(
+      { sub: user.id, role: user.role },
+      { expiresIn: "15m" },
+    );
+  
+    const newRefreshToken = this.jwtService.sign(
+      { sub: user.id, type: "refresh" },
+      { expiresIn: "7d" },
+    );
+  
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+      user: this.usersService.toPublicProfile(user),
+    };
+  }
+
 }
