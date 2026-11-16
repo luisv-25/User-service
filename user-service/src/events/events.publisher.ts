@@ -28,6 +28,24 @@ export class EventsPublisher implements OnModuleInit {
     });
   }
 
+  
+  publishUserUpdated(payload: {
+    userId: string;
+    role: string;
+    fullName?: string;
+}) {
+    this.logger.log(
+      `Publicando user.updated para ${payload.userId}`,
+    );
+
+      return this.client.emit("user.updated", {
+        eventName: "user.updated",
+        occurredAt: new Date().toISOString(),
+        data: payload,
+    });
+  }
+
+
   // Comunica el resultado del flujo de aprobación (documento primario,
   // sección 2 y 3) para que Catalog Service pueda, más adelante, filtrar u
   // ocultar del catálogo a los tutores que no estén "approved" —
