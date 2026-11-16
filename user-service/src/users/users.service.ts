@@ -48,6 +48,25 @@ export class UsersService {
     if (!user) throw new NotFoundException(`Usuario ${id} no encontrado`);
     return user;
   }
+  
+  async updateUser(id: string, fullName?: string) {
+  const user = await this.findById(id);
+
+  if (fullName !== undefined) {
+    user.full_name = fullName.trim();
+  }
+
+  const updated = await this.usersRepo.save(user);
+
+  this.eventsPublisher.publishUserUpdated({
+    userId: updated.id,
+    role: updated.role,
+    fullName: updated.full_name,
+  });
+
+    return this.toPublicProfile(updated);
+  }
+
 
   createUser(data: Partial<User>) {
     const user = this.usersRepo.create(data);
